@@ -1,6 +1,6 @@
-# Vox: The Audio Engine of [ProxVox](https://github.com/pjaako/ProxVox)*
+# Vox: The Audio Engine of [ProxVox](https://github.com/pjaako/ProxVox)¹
 
-Vox-software is a headless software infrastructure declaration designed for hi-fi playback and streaming integration. It serves as the "audio engine" for the **[ProxVox*](https://github.com/pjaako/ProxVox)** project.
+Vox-software is a headless software infrastructure declaration designed for hi-fi playback and streaming integration. It serves as the "audio engine" for the **[ProxVox](https://github.com/pjaako/ProxVox)¹** project.
 
 Built on **Debian 13 (Trixie)** and optimized for **LXC containers**, Vox provides a reproducible way to manage an audio stack supporting, among other services, Tidal and Spotify audio endpoint.
 
@@ -17,7 +17,7 @@ Built on **Debian 13 (Trixie)** and optimized for **LXC containers**, Vox provid
 
 ## Architecture: The "Why"
 
-Unlike traditional "monolithic" audio setups, Vox is built with **agency and tinkering** in mind:
+Unlike traditional "snowflake" audio setups, Vox is built with **agency and tinkering** in mind:
 
 *   **LXC over Docker:** Chosen for stable hardware passthrough and persistent system-level debugging.
 *   **Debian Trixie (13):** Provides up-to-date repositories for `upmpdcli` and other audio services.
@@ -42,8 +42,8 @@ Before running the setup, ensure your LXC host (e.g., Proxmox) is configured for
 Run the master bootstrap script inside your fresh Debian 13 LXC:
 
 ```bash
-git clone https://github.com/your-username/vox.git
-cd vox
+git clone https://github.com/pjaako/vox-software.git
+cd vox-software
 sudo bash setup.sh
 ```
 
@@ -93,4 +93,5 @@ This repository includes configuration for automation and maintenance agents:
 ---
 
 Coauthored by Junie
-****Not affiliated, sponsored, or endorsed by [Proxmox](https://github.com/proxmox).*** 
+
+¹ *Not affiliated, sponsored, or endorsed by [Proxmox Server Solutions GmbH](https://www.proxmox.com).*
