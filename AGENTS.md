@@ -24,6 +24,7 @@ When stuck or looking for feature inspiration, peek at:
 - **Device Awareness:** Verify audio device availability before troubleshooting services.
 - **The "Recipe" Rule:** If you modify a configuration file (e.g., `/etc/mpd.conf`), you **MUST** update the corresponding heredoc in `setup.sh`.
 - **Log Monitoring:** Use `journalctl -u upmpdcli -f` to verify Tidal authentication and plugin handshakes.
+- **Discussion First:** You MUST always discuss proposed changes with the user and obtain explicit approval BEFORE committing any changes to the repository.
 - **LXC Host Prep:** Ensure hardware passthrough and container options (Nesting, Keyctl) are configured on the host before deployment (see [Section 7](#7-host-side-preparation)).
 
 #### 5. Anti-Patterns (Things to Avoid)
