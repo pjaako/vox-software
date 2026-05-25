@@ -1,0 +1,14 @@
+# Junie runtime data
+.junie/*
+!.junie/config.json
+!.junie/agents/
+!.junie/commands/
+.junie/agents/*
+!.junie/agents/*.md
+.junie/commands/*
+!.junie/commands/*.md
+
+# System/Local files
+.DS_Store
+*.log
+tmp/

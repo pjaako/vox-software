@@ -1,0 +1,7 @@
+{
+  "guidelines-location": "../AGENTS.md",
+  "command-locations": ["./commands"],
+  "agent-locations": ["./agents"],
+  "command-default-locations": true,
+  "agent-default-location": true
+}
