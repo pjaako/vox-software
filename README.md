@@ -1,14 +1,14 @@
-# Vox: The Audio Engine of ProxVox
+# Vox: The Audio Engine of [ProxVox]https://github.com/pjaako/ProxVox*
 
-Vox is an audio-focused, headless infrastructure gateway and player designed for high-fidelity playback and seamless streaming integration. It serves as the "audio engine" for the **ProxVox** environment.
+Vox-software is a headless software infrastructure declaration designed for hi-fi playback and streaming integration. It serves as the "audio engine" for the **[ProxVox*]https://github.com/pjaako/ProxVox** project.
 
-Built on **Debian 13 (Trixie)** and optimized for **LXC containers**, Vox provides a declarative, reproducible way to manage a complex audio stack including MPD, Tidal, Spotify Connect, and Radio Paradise.
+Built on **Debian 13 (Trixie)** and optimized for **LXC containers**, Vox provides a reproducible way to manage an audio stack supporting, among other services, Tidal and Spotify audio endpoint.
 
 ---
 
 ## Features
 
-- **Multi-Source Playback:** Integrated support for Tidal (via `upmpdcli`), Radio Paradise, and Spotify Connect (`raspotify`).
+- **Multi-Source Playback:** Integrated support for Tidal (via [upmpdcli]https://framagit.org/medoc92/upmpdcli), Internet Radios, and Spotify Connect ([raspotify]https://github.com/dtcooper/raspotify).
 - **Network Rendering:** Fully compatible UPnP/DLNA/OpenHome renderer.
 - **High-Fidelity Audio:** Headless design with ALSA passthrough for bit-perfect potential.
 - **Reproducible State:** "Nuke and Pave" readiness—deployment and configuration are handled by a single master script.
@@ -17,7 +17,7 @@ Built on **Debian 13 (Trixie)** and optimized for **LXC containers**, Vox provid
 
 ## Architecture: The "Why"
 
-Unlike traditional "snowflake" audio setups, Vox is built with **agency and tinkering** in mind:
+Unlike traditional "monolithic" audio setups, Vox is built with **agency and tinkering** in mind:
 
 *   **LXC over Docker:** Chosen for stable hardware passthrough and persistent system-level debugging.
 *   **Debian Trixie (13):** Provides up-to-date repositories for `upmpdcli` and other audio services.
@@ -93,3 +93,4 @@ This repository includes configuration for automation and maintenance agents:
 ---
 
 Coauthored by Junie
+****Not affiliated, sponsored, or endorsed by [Proxmox](https://github.com/proxmox).*** 
