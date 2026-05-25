@@ -1,6 +1,6 @@
-# Vox: The Audio Engine of [ProxVox]https://github.com/pjaako/ProxVox*
+# Vox: The Audio Engine of [ProxVox](https://github.com/pjaako/ProxVox)*
 
-Vox-software is a headless software infrastructure declaration designed for hi-fi playback and streaming integration. It serves as the "audio engine" for the **[ProxVox*]https://github.com/pjaako/ProxVox** project.
+Vox-software is a headless software infrastructure declaration designed for hi-fi playback and streaming integration. It serves as the "audio engine" for the **[ProxVox*](https://github.com/pjaako/ProxVox)** project.
 
 Built on **Debian 13 (Trixie)** and optimized for **LXC containers**, Vox provides a reproducible way to manage an audio stack supporting, among other services, Tidal and Spotify audio endpoint.
 
@@ -8,7 +8,7 @@ Built on **Debian 13 (Trixie)** and optimized for **LXC containers**, Vox provid
 
 ## Features
 
-- **Multi-Source Playback:** Integrated support for Tidal (via [upmpdcli]https://framagit.org/medoc92/upmpdcli), Internet Radios, and Spotify Connect ([raspotify]https://github.com/dtcooper/raspotify).
+- **Multi-Source Playback:** Integrated support for Tidal (via [upmpdcli](https://framagit.org/medoc92/upmpdcli)), Internet Radios, and Spotify Connect ([raspotify](https://github.com/dtcooper/raspotify)).
 - **Network Rendering:** Fully compatible UPnP/DLNA/OpenHome renderer.
 - **High-Fidelity Audio:** Headless design with ALSA passthrough for bit-perfect potential.
 - **Reproducible State:** "Nuke and Pave" readiness—deployment and configuration are handled by a single master script.
