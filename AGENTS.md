@@ -33,7 +33,7 @@ When stuck or looking for feature inspiration, peek at:
 - **Silent Failures:** Always check service exit codes after a configuration reload.
 
 #### 6. Workflow Capture (Commands & Subagents)
-- **Custom Commands:** Use `.junie/commands/` to define shortcuts for repetitive human tasks (e.g., `/health`, `/logs`).
+- **Custom Commands:** Use `.junie/commands/` to define shortcuts for repetitive human tasks (e.g., `/soundcheck`, `/logs`).
 - **Subagents:** Use `.junie/agents/` to define specialized handlers for complex delegation (e.g., `audio-troubleshooter`).
 - **Standardization:** All operational logic must be captured in either a script, a command, or a subagent to ensure it remains part of the project's "living" documentation.
 

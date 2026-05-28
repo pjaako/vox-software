@@ -13,7 +13,7 @@ fi
 
 # 1. Basic Tools
 apt-get update
-apt-get install -y curl gpg gnupg2
+apt-get install -y --no-install-recommends curl gpg gnupg2
 
 # 2. Add Repositories and Keys
 echo "Adding repository keys..."
@@ -34,13 +34,18 @@ EOF
 
 # 3. Install Packages
 apt-get update
-apt-get install -y \
-    mpd mpc \
-    upmpdcli upmpdcli-radio-paradise upmpdcli-radios \
+apt-get install -y --no-install-recommends \
+    mpd mpc alsa-utils \
+    upmpdcli upmpdcli-radio-paradise upmpdcli-radios upmpdcli-tidal \
     raspotify \
+    python3-pip \
     glow bat
 
-# 4. Apply Configurations
+# 4. Install Tidal API
+echo "Installing Tidal API Python module..."
+pip3 install --break-system-packages tidalapi
+
+# 5. Apply Configurations
 echo "Applying service configurations..."
 
 # MPD
@@ -77,6 +82,18 @@ else
 fi
 TIDAL_USER=${TIDAL_USER:-"your-email@example.com"}
 
+if [ "$TIDAL_USER" != "your-email@example.com" ]; then
+    echo ""
+    echo "--- IMPORTANT: Tidal OAuth2 Authorization ---"
+    echo "To complete Tidal setup, you will need to authorize this device:"
+    echo "1. After this script finishes, check the service logs:"
+    echo "   journalctl -u upmpdcli -f"
+    echo "2. Look for a link like: https://link.tidal.com/ABCDE"
+    echo "3. Open that link in your browser and log in to Tidal to approve."
+    echo "---------------------------------------------"
+    echo ""
+fi
+
 cat <<EOF > /etc/upmpdcli.conf
 upnpiface = eth0
 upnpav = 0
@@ -105,8 +122,17 @@ LIBRESPOT_QUIET=
 TMPDIR=/tmp
 EOF
 
+# 6. Hardware Mixer
+echo "Initializing hardware mixer levels..."
+amixer sset Master 100% unmute
+amixer sset PCM 100%
+amixer sset Front 100% unmute
+
 # 7. Restart Services
 systemctl daemon-reload
 systemctl restart mpd upmpdcli raspotify
+
+# 8. Cleanup
+apt-get clean
 
 echo "--- Vox Setup Complete! ---"

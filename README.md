@@ -82,7 +82,7 @@ systemctl status mpd upmpdcli raspotify
 This repository includes configuration for automation and maintenance agents:
 - **Project Guidelines:** See [AGENTS.md](./AGENTS.md).
 - **Subagents:** Specialized handlers are available for audio debugging.
-- **Custom Commands:** Shortcuts for health checks and logs are defined in `.junie/commands/`.
+- **Custom Commands:** Shortcuts for soundchecks and logs are defined in `.junie/commands/`.
 
 ---
 
