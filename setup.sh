@@ -130,6 +130,7 @@ amixer sset Front 100% unmute
 
 # 7. Restart Services
 systemctl daemon-reload
+systemctl enable mpd upmpdcli raspotify
 systemctl restart mpd upmpdcli raspotify
 
 # 8. Cleanup
