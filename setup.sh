@@ -42,12 +42,12 @@ apt-get install -y -qq --no-install-recommends curl gpg gnupg2 && echo -e "${GRE
 step "Adding external repositories"
 
 task "Configuring Raspotify repository"
-curl -fsSL https://dtcooper.github.io/raspotify/key.asc | gpg --dearmor -o /usr/share/keyrings/raspotify_key.asc 2>/dev/null
+curl -fsSL https://dtcooper.github.io/raspotify/key.asc | gpg --batch --yes --dearmor -o /usr/share/keyrings/raspotify_key.asc 2>/dev/null
 echo "deb [signed-by=/usr/share/keyrings/raspotify_key.asc] https://dtcooper.github.io/raspotify raspotify main" > /etc/apt/sources.list.d/raspotify.list
 echo -e "${GREEN}DONE${NC}"
 
 task "Configuring upmpdcli repository"
-curl -fsSL https://www.lesbonscomptes.com/pages/lesbonscomptes.gpg | gpg --dearmor -o /usr/share/keyrings/lesbonscomptes.gpg 2>/dev/null
+curl -fsSL https://www.lesbonscomptes.com/pages/lesbonscomptes.gpg | gpg --batch --yes --dearmor -o /usr/share/keyrings/lesbonscomptes.gpg 2>/dev/null
 cat <<EOF > /etc/apt/sources.list.d/upmpdcli.sources
 Types: deb deb-src
 URIs: http://www.lesbonscomptes.com/upmpdcli/downloads/debian/
@@ -59,6 +59,10 @@ echo -e "${GREEN}DONE${NC}"
 
 # 3. Install Packages
 step "Installing core audio packages"
+task "Creating raspotify user"
+useradd -r -s /usr/sbin/nologin -G audio raspotify 2>/dev/null || true
+echo -e "${GREEN}DONE${NC}"
+
 task "Refreshing package lists"
 apt-get update -qq && echo -e "${GREEN}DONE${NC}" || (echo -e "${RED}FAILED${NC}"; exit 1)
 
@@ -67,13 +71,16 @@ apt-get install -y -qq --no-install-recommends \
     mpd mpc alsa-utils \
     upmpdcli upmpdcli-radio-paradise upmpdcli-radios upmpdcli-tidal \
     raspotify \
-    python3-pip \
+    python3-pip python3-venv \
     glow bat && echo -e "${GREEN}DONE${NC}" || (echo -e "${RED}FAILED${NC}"; exit 1)
 
 # 4. Install Tidal API
 step "Installing Tidal integration"
-task "Installing Tidal API Python module"
-pip3 install -q --break-system-packages tidalapi && echo -e "${GREEN}DONE${NC}" || (echo -e "${RED}FAILED${NC}"; exit 1)
+task "Creating Python Virtual Environment"
+python3 -m venv /var/cache/upmpdcli/venv && echo -e "${GREEN}DONE${NC}" || (echo -e "${RED}FAILED${NC}"; exit 1)
+
+task "Installing Tidal API Python module into venv"
+/var/cache/upmpdcli/venv/bin/pip install -q --upgrade tidalapi && echo -e "${GREEN}DONE${NC}" || (echo -e "${RED}FAILED${NC}"; exit 1)
 
 # 5. Apply Configurations
 step "Applying service configurations"
@@ -144,6 +151,28 @@ bbctitle = BBC Sounds
 friendlyname = ProxVox-ONKYO (Tidal/OpenHome)
 tidaluser = $TIDAL_USER
 tidalautostart = 1
+EOF
+echo -e "${GREEN}DONE${NC}"
+
+task "Applying systemd override for Python venv and user"
+mkdir -p /etc/systemd/system/upmpdcli.service.d
+cat <<EOF > /etc/systemd/system/upmpdcli.service.d/venv_path.conf
+[Service]
+User=upmpdcli
+Group=upmpdcli
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+Environment=PATH=/var/cache/upmpdcli/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EOF
+echo -e "${GREEN}DONE${NC}"
+
+task "Applying systemd override for Raspotify hardening"
+mkdir -p /etc/systemd/system/raspotify.service.d
+cat <<EOF > /etc/systemd/system/raspotify.service.d/hardening.conf
+[Service]
+User=raspotify
+Group=raspotify
+SupplementaryGroups=audio
+PrivateUsers=no
 EOF
 echo -e "${GREEN}DONE${NC}"
 
