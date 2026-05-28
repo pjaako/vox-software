@@ -32,11 +32,14 @@ Before running the setup, ensure your LXC host (e.g., Proxmox) is configured for
 
 **Proxmox VE Requirements:**
 1. Enable **Nesting** and **Keyctl** in the LXC options.
-2. Edit `/etc/pve/lxc/ID.conf` on the host and add:
+2. Edit `/etc/pve/lxc/ID.conf` on the host and add native device passthrough entries.
+   Find your audio devices on the host with `ls -l /dev/snd`, then add entries for each (e.g., control, pcm, timer):
    ```text
-   lxc.cgroup2.devices.allow: c 116:* rwm
-   lxc.mount.entry: /dev/snd dev/snd none bind,optional,create=dir
+   dev0: /dev/snd/controlC0,gid=29
+   dev1: /dev/snd/pcmC0D0p,gid=29
+   dev2: /dev/snd/timer,gid=29
    ```
+   *Note: `gid=29` corresponds to the 'audio' group. This ensures the container has the correct permissions to access the hardware.*
 
 ### 2. Installation
 Run the master bootstrap script inside your fresh Debian 13 LXC:

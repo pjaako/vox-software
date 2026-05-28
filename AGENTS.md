@@ -56,12 +56,16 @@ lxc.mount.entry: /dev/snd dev/snd none bind,optional,create=dir
    - Enable **Nesting**.
    - Enable **Keyctl**.
 2. **Manual Config:** Edit the config file on the Proxmox host: `/etc/pve/lxc/ID.conf` (replace `ID` with your container ID).
-   - Add the following lines to the end of the file:
+   - Add native `dev[n]` entries to pass through specific audio devices.
+   - To identify your devices on the host, run: `ls -l /dev/snd`
+   - Example configuration (adjust paths based on your host's `ls` output):
      ```text
-     lxc.cgroup2.devices.allow: c 116:* rwm
-     lxc.mount.entry: /dev/snd dev/snd none bind,optional,create=dir
+     dev0: /dev/snd/controlC0,gid=29
+     dev1: /dev/snd/hwC0D0,gid=29
+     dev2: /dev/snd/pcmC0D0p,gid=29
+     dev3: /dev/snd/timer,gid=29
      ```
-   - *Note:* `116` is the standard major number for audio devices. Verify on host with `ls -l /dev/snd`.
+   - **Why this syntax?** Proxmox uses `dev[n]` to handle both the device mount and the cgroup permission automatically. The `gid=29` parameter ensures the device is accessible by the `audio` group (GID 29) inside the container.
 3. **Restart:** Reboot the LXC to apply hardware passthrough changes.
 
 ---
