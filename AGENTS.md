@@ -13,6 +13,8 @@ Vox is the audio-focused component of the **ProxVox** project (the other part be
 #### 2. Architectural Choices (The "Why")
 - **LXC vs. Docker:** LXC was chosen for stable hardware passthrough and persistent system-level debugging.
 - **Debian Trixie (13):** Provides up-to-date repositories for `upmpdcli` and other audio services.
+- **Exclusive Access (No Mixing):** Concurrency (simultaneous playback) is explicitly rejected as an anti-pattern for this project. Mixing Tidal and Spotify is considered undesirable. The system will use a source-selector approach to ensure the active service has dedicated hardware access, preserving signal integrity.
+- **Software DSP (CamillaDSP):** For any future filtering needs (EQ, Room Correction), CamillaDSP is the designated engine due to its FOSS nature, high performance (Rust), and alignment with the "Exclusive Access" model.
 
 #### 3. Reference Solutions
 When stuck or looking for feature inspiration, peek at:
