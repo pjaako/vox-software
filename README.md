@@ -65,6 +65,20 @@ sudo bash setup.sh
 
 ## Maintenance & Health
 
+### ALSA Output Selection Policy
+
+`setup.sh` now probes ALSA playback candidates before writing `/etc/mpd.conf`.
+
+- Daemon preflight is run near startup to make reruns predictable when services are already active.
+- Default precheck mode is `auto-stop` via `VOX_DAEMON_PRECHECK_MODE` (`auto-stop` | `fail-fast` | `off`).
+- Core daemons covered by preflight: `mpd`, `upmpdcli`, and `raspotify`.
+
+- Default policy is `direct-first` (can be overridden with `ALSA_SELECTOR_POLICY`).
+- Candidate order for `direct-first`: `hw:CARD=<name>,DEV=0` -> `plughw:CARD=<name>,DEV=0` -> `sysdefault:CARD=<name>` -> `hw:0,0` -> `default`.
+- Candidate order for resilience mode (any value other than `direct-first`): `plughw` first, then `hw`, then the same fallbacks.
+- Probing uses a finite raw sample with `aplay` to avoid false negatives caused by timeout-killing infinite streams.
+- The first working candidate is written into the MPD heredoc as `device "${MPD_ALSA_DEVICE}"`.
+
 **Check all services:**
 ```bash
 systemctl status mpd upmpdcli raspotify
