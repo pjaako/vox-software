@@ -14,7 +14,6 @@ source "$HELPERS_FILE"
 
 echo -e "${BOLD}--- Starting Vox Setup ---${NC}"
 
-# 0. Hardware Check
 task "Checking audio hardware"
 if [ ! -d /dev/snd ]; then
     warn "NOT FOUND"
@@ -23,16 +22,16 @@ else
     print_OK
 fi
 
-# 1. Basic Tools
-step "Installing basic tools"
+
+section "Installing basic tools"
 task "Updating apt repositories"
 run_cmd apt-get update -qq
 
 task "Installing curl, gpg, gnupg2"
 run_cmd apt-get install -y -qq --no-install-recommends curl gpg gnupg2
 
-# 2. Add Repositories and Keys
-step "Adding external repositories"
+
+section "Adding external repositories"
 
 task "Configuring Raspotify repository"
 run_block 'curl -fsSL https://dtcooper.github.io/raspotify/key.asc | gpg --batch --yes --dearmor -o /usr/share/keyrings/raspotify_key.asc 2>/dev/null
@@ -48,8 +47,8 @@ Components: main
 Signed-By: /usr/share/keyrings/lesbonscomptes.gpg
 EOF"
 
-# 3. Install Packages
-step "Installing core audio packages"
+
+section "Installing core audio packages"
 task "Creating raspotify user"
 useradd -r -s /usr/sbin/nologin -G audio raspotify 2>/dev/null || true
 print_OK
@@ -65,16 +64,16 @@ run_cmd apt-get install -y -qq --no-install-recommends \
     python3-pip python3-venv \
     glow bat
 
-# 4. Install Tidal API
-step "Installing Tidal integration"
+
+section "Installing Tidal integration"
 task "Creating Python Virtual Environment"
 run_cmd python3 -m venv /var/cache/upmpdcli/venv
 
 task "Installing Tidal API Python module into venv"
 run_cmd /var/cache/upmpdcli/venv/bin/pip install -q --upgrade tidalapi
 
-# 5. Apply Configurations
-step "Applying service configurations"
+
+section "Applying service configurations"
 
 task "Configuring MPD"
 cat <<EOF > /etc/mpd.conf
@@ -176,15 +175,15 @@ TMPDIR=/tmp
 EOF
 print_OK
 
-# 6. Hardware Mixer
-step "Initializing hardware mixer levels"
+
+section "Initializing hardware mixer levels"
 task "Unmuting and setting Master/PCM/Front to 100%"
 run_block 'amixer sset Master 100% unmute >/dev/null 2>&1
 amixer sset PCM 100% >/dev/null 2>&1
 amixer sset Front 100% unmute >/dev/null 2>&1'
 
-# 7. Restart Services
-step "Starting services"
+
+section "Starting services"
 task "Reloading systemd"
 run_cmd systemctl daemon-reload
 
@@ -192,8 +191,8 @@ task "Enabling and restarting core services"
 systemctl enable mpd upmpdcli raspotify >/dev/null 2>&1
 run_cmd systemctl restart mpd upmpdcli raspotify
 
-# 8. Cleanup
-step "Cleaning up"
+
+section "Cleaning up"
 task "Removing temporary files"
 run_cmd apt-get clean
 

@@ -20,7 +20,8 @@ function warn() {
 }
 function error() { echo -e "${RED}error:${NC} $1"; }
 function task() { echo -ne "  ${BLUE}..${NC} $1... "; }
-function step() { echo -e "\n${BOLD}${BLUE}==>${NC} ${BOLD}$1${NC}"; }
+function section() { echo -e "\n${BOLD}${BLUE}==>${NC} ${BOLD}$1${NC}"; }
+function step() { section "$1"; }
 function print_OK() { echo -e "${GREEN}OK${NC}"; }
 function print_failed() { echo -e "${RED}FAILED${NC}"; }
 
