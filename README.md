@@ -91,6 +91,7 @@ This repository includes configuration for automation and maintenance agents:
 
 ## Governance
 - **Source of Truth:** [setup.sh](./setup.sh)
+- **Helper Library:** [lib/setup_helpers.sh](./lib/setup_helpers.sh) (loaded by `setup.sh` for shared UI and command-runner functions)
 - **Guidelines:** [AGENTS.md](./AGENTS.md)
 
 ---

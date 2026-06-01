@@ -74,4 +74,5 @@ lxc.mount.entry: /dev/snd dev/snd none bind,optional,create=dir
 The `./setup.sh` script is the definitive source of truth.
 - **Execution:** `bash setup.sh`
 - **Function:** Rebuilds repositories, installs packages, applies systemd overrides, and sets baseline configs.
+- **Helper Source:** Shared UI/status runner functions are loaded from `./lib/setup_helpers.sh`.
 - **Nuke and Pave:** This system is designed to be fully reproducible on a fresh Debian 13 LXC by running this script.
