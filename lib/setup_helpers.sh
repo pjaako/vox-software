@@ -25,6 +25,13 @@ function step() { section "$1"; }
 function print_OK() { echo -e "${GREEN}OK${NC}"; }
 function print_failed() { echo -e "${RED}FAILED${NC}"; }
 
+function summary() {
+    local label=$1
+    local value=$2
+    local note=$3
+    printf "  %-18s: ${BOLD}%s${NC} %s\n" "$label" "$value" "$note"
+}
+
 run_cmd() {
     if "$@"; then
         print_OK

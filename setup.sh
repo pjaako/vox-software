@@ -12,7 +12,40 @@ if [ ! -f "$HELPERS_FILE" ]; then
 fi
 source "$HELPERS_FILE"
 
+# --- Discovery & Configuration ---
+
+# Argument Parsing
+CHECK_MODE=0
+for arg in "$@"; do
+    case $arg in
+        -c|--check) CHECK_MODE=1 ;;
+    esac
+done
+
+# 1. Network Interface Discovery
+PROBED_IFACE=$(ip route 2>/dev/null | grep default | awk '{print $5}' | head -n1)
+VOX_INTERFACE="${VOX_INTERFACE:-${PROBED_IFACE:-eth0}}"
+
+# 2. Media User Discovery
+PROBED_USER=$(id -un)
+VOX_MEDIA_USER="${VOX_MEDIA_USER:-${PROBED_USER}}"
+
+# 3. Tidal Credentials Discovery
+EXISTING_TIDAL_USER=$(grep "^tidaluser =" /etc/upmpdcli.conf 2>/dev/null | cut -d'=' -f2 | xargs || true)
+VOX_TIDAL_USER="${VOX_TIDAL_USER:-${EXISTING_TIDAL_USER:-"your-email@example.com"}}"
+
 echo -e "${BOLD}--- Starting Vox Setup ---${NC}"
+
+section "Configuration Discovery"
+summary "Network Interface" "$VOX_INTERFACE" "$([ -n "$PROBED_IFACE" ] && [ "$VOX_INTERFACE" = "$PROBED_IFACE" ] && echo "(Auto-probed)" || echo "(Manual/Fallback)")"
+summary "Media User" "$VOX_MEDIA_USER" "$([ "$VOX_MEDIA_USER" = "$PROBED_USER" ] && echo "(Current user)" || echo "(Manual override)")"
+summary "Tidal Account" "$VOX_TIDAL_USER" "$([ "$VOX_TIDAL_USER" = "your-email@example.com" ] && echo "(Not configured)" || echo "(Detected)")"
+
+if [ "$CHECK_MODE" -eq 1 ]; then
+    echo ""
+    info "Dry-run mode active (--check). Exiting without changes."
+    exit 0
+fi
 
 task "Checking audio hardware"
 if [ ! -d /dev/snd ]; then
@@ -205,45 +238,25 @@ print_OK
 # upmpdcli
 # We use a heredoc but keep existing credentials if possible.
 info "Configuring upmpdcli..."
-EXISTING_TIDAL_USER=$(grep "^tidaluser =" /etc/upmpdcli.conf 2>/dev/null | cut -d'=' -f2 | xargs || true)
-if [ -t 0 ]; then
-    warn -n "${BOLD}??${NC} Enter Tidal user email [${EXISTING_TIDAL_USER:-your-email@example.com}]: "
-    read NEW_TIDAL_USER
-    TIDAL_USER=${NEW_TIDAL_USER:-$EXISTING_TIDAL_USER}
-else
-    TIDAL_USER=$EXISTING_TIDAL_USER
-fi
-TIDAL_USER=${TIDAL_USER:-"your-email@example.com"}
-
-if [ "$TIDAL_USER" != "your-email@example.com" ]; then
-    warn "\n---------------------------------------------"
-    warn "${BOLD}IMPORTANT: Tidal OAuth2 Authorization Required"
-    echo -e "To complete Tidal setup, you will need to authorize this device:"
-    echo -e "1. After this script finishes, check the service logs:"
-    echo -e "   ${BOLD}journalctl -u upmpdcli -f${NC}"
-    echo -e "2. Look for a link like: ${BLUE}https://link.tidal.com/ABCDE${NC}"
-    echo -e "3. Open that link in your browser and log in to Tidal to approve."
-    warn "---------------------------------------------\n"
-fi
 
 task "Writing upmpdcli configuration"
 cat <<EOF > /etc/upmpdcli.conf
-upnpiface = eth0
+upnpiface = $VOX_INTERFACE
 upnpav = 0
 openhome = 1
 ohmodelname = ProxVox-ONKYO
 ohproductname = ProxVox-ONKYO
 msfriendlyname = ProxVox-Tidal-Gateway
 webserverdocumentroot = /var/cache/upmpdcli/www
-uprcluser = bugsbunny
+uprcluser = $VOX_MEDIA_USER
 uprcltitle = Local Music
-upradiosuser = bugsbunny
+upradiosuser = $VOX_MEDIA_USER
 upradiostitle = Upmpdcli Radio List
-radio-paradiseuser = bugsbunny
+radio-paradiseuser = $VOX_MEDIA_USER
 radio-paradisetitle = Radio Paradise
 bbctitle = BBC Sounds
 friendlyname = ProxVox-ONKYO (Tidal/OpenHome)
-tidaluser = $TIDAL_USER
+tidaluser = $VOX_TIDAL_USER
 tidalautostart = 1
 EOF
 print_OK
@@ -301,3 +314,5 @@ task "Removing temporary files"
 run_cmd apt-get clean
 
 echo -e "\n${BOLD}${GREEN}--- Vox Setup Complete! ---${NC}"
+info "Infrastructure is ready. To configure your accounts, run:"
+info "  ${BOLD}python3 vox-accounts.py${NC}"
