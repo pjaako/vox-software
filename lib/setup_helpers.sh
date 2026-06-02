@@ -155,7 +155,8 @@ function authorize_tidal() {
     mkdir -p "$cred_dir"
     chown upmpdcli:upmpdcli "$cred_dir"
 
-    if ! sudo -u upmpdcli python3 /usr/share/upmpdcli/cdplugins/tidal/get_credentials.py -t pkce -f "$cred_file"; then
+    local venv_python="/var/cache/upmpdcli/venv/bin/python3"
+    if ! sudo -u upmpdcli "$venv_python" /usr/share/upmpdcli/cdplugins/tidal/get_credentials.py -t pkce -f "$cred_file"; then
         warn "Tidal authorization skipped or failed."
         return 1
     fi

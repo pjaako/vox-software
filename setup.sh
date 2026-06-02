@@ -85,7 +85,8 @@ run_cmd apt-get update -qq
 task "Installing MPD, upmpdcli, Raspotify and dependencies"
 run_cmd apt-get install -y -qq --no-install-recommends \
     mpd mpc alsa-utils \
-    upmpdcli upmpdcli-radio-paradise upmpdcli-radios upmpdcli-tidal \
+    upmpdcli upmpdcli-radio-paradise upmpdcli-radios upmpdcli-tidal upmpdcli-uprcl \
+    recollcmd python3-recoll python3-mutagen \
     raspotify \
     python3-pip python3-venv \
     glow bat
@@ -153,6 +154,7 @@ highresaudiouser = highresaudio
 uprclautostart = 1
 tidalautostart = 1
 
+uprclmediadirs = /var/lib/mpd/music
 uprcltitle = Local Music
 upradiostitle = Internet Radio
 radio-paradisetitle = Radio Paradise
