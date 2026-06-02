@@ -26,20 +26,11 @@ done
 PROBED_IFACE=$(ip route 2>/dev/null | grep default | awk '{print $5}' | head -n1)
 VOX_INTERFACE="${VOX_INTERFACE:-${PROBED_IFACE:-eth0}}"
 
-# 2. Media User Discovery
-PROBED_USER=$(id -un)
-VOX_MEDIA_USER="${VOX_MEDIA_USER:-${PROBED_USER}}"
-
-# 3. Tidal Credentials Discovery
-EXISTING_TIDAL_USER=$(grep "^tidaluser =" /etc/upmpdcli.conf 2>/dev/null | cut -d'=' -f2 | xargs || true)
-VOX_TIDAL_USER="${VOX_TIDAL_USER:-${EXISTING_TIDAL_USER:-"your-email@example.com"}}"
-
+# 2. Discovery Summary
 echo -e "${BOLD}--- Starting Vox Setup ---${NC}"
 
 section "Configuration Discovery"
 summary "Network Interface" "$VOX_INTERFACE" "$([ -n "$PROBED_IFACE" ] && [ "$VOX_INTERFACE" = "$PROBED_IFACE" ] && echo "(Auto-probed)" || echo "(Manual/Fallback)")"
-summary "Media User" "$VOX_MEDIA_USER" "$([ "$VOX_MEDIA_USER" = "$PROBED_USER" ] && echo "(Current user)" || echo "(Manual override)")"
-summary "Tidal Account" "$VOX_TIDAL_USER" "$([ "$VOX_TIDAL_USER" = "your-email@example.com" ] && echo "(Not configured)" || echo "(Detected)")"
 
 if [ "$CHECK_MODE" -eq 1 ]; then
     echo ""
@@ -248,16 +239,24 @@ ohmodelname = ProxVox-ONKYO
 ohproductname = ProxVox-ONKYO
 msfriendlyname = ProxVox-Tidal-Gateway
 webserverdocumentroot = /var/cache/upmpdcli/www
-uprcluser = $VOX_MEDIA_USER
+
+# Service Activation (Bogus user variables as per manual)
+uprcluser = uprcl
+upradiosuser = upradio
+radio-paradiseuser = radio-paradise
+tidaluser = tidal
+qobuzuser = qobuz
+highresaudiouser = highresaudio
+
+# Autostart flags
+uprclautostart = 1
+tidalautostart = 1
+
 uprcltitle = Local Music
-upradiosuser = $VOX_MEDIA_USER
-upradiostitle = Upmpdcli Radio List
-radio-paradiseuser = $VOX_MEDIA_USER
+upradiostitle = Internet Radio
 radio-paradisetitle = Radio Paradise
 bbctitle = BBC Sounds
 friendlyname = ProxVox-ONKYO (Tidal/OpenHome)
-tidaluser = $VOX_TIDAL_USER
-tidalautostart = 1
 EOF
 print_OK
 
@@ -299,6 +298,16 @@ run_block 'amixer sset Master 100% unmute >/dev/null 2>&1
 amixer sset PCM 100% >/dev/null 2>&1
 amixer sset Front 100% unmute >/dev/null 2>&1'
 
+section "Account Configuration"
+TIDAL_CRED_FILE="/var/cache/upmpdcli/tidal/pkce.credentials.json"
+info "Starting interactive Tidal authorization..."
+# Ensure the directory exists and is writable by upmpdcli
+mkdir -p /var/cache/upmpdcli/tidal
+chown upmpdcli:upmpdcli /var/cache/upmpdcli/tidal
+
+if ! sudo -u upmpdcli python3 /usr/share/upmpdcli/cdplugins/tidal/get_credentials.py -t pkce -f "$TIDAL_CRED_FILE"; then
+    warn "Tidal authorization skipped or failed."
+fi
 
 section "Starting services"
 task "Reloading systemd"
@@ -314,5 +323,4 @@ task "Removing temporary files"
 run_cmd apt-get clean
 
 echo -e "\n${BOLD}${GREEN}--- Vox Setup Complete! ---${NC}"
-info "Infrastructure is ready. To configure your accounts, run:"
-info "  ${BOLD}python3 vox-accounts.py${NC}"
+info "Infrastructure is ready."
