@@ -23,7 +23,7 @@ for arg in "$@"; do
 done
 
 # 1. Network Interface Discovery
-PROBED_IFACE=$(ip route 2>/dev/null | grep default | awk '{print $5}' | head -n1)
+PROBED_IFACE=$(probe_network_interface "")
 VOX_INTERFACE="${VOX_INTERFACE:-${PROBED_IFACE:-eth0}}"
 
 # 2. Discovery Summary
@@ -46,54 +46,7 @@ else
     print_OK
 fi
 
-task "Checking for active audio daemons"
-DAEMON_PRECHECK_MODE="${VOX_DAEMON_PRECHECK_MODE:-auto-stop}"
-CORE_DAEMONS=(mpd upmpdcli raspotify)
-ACTIVE_DAEMONS=()
-
-for svc in "${CORE_DAEMONS[@]}"; do
-    if systemctl is-active --quiet "$svc"; then
-        ACTIVE_DAEMONS+=("$svc")
-    fi
-done
-
-if [ "${#ACTIVE_DAEMONS[@]}" -eq 0 ]; then
-    print_OK
-else
-    warn "Detected running daemons: ${ACTIVE_DAEMONS[*]}"
-    case "$DAEMON_PRECHECK_MODE" in
-        auto-stop)
-            warn "Stopping active daemons before setup for deterministic probing..."
-            STOP_FAILED=()
-            for svc in "${ACTIVE_DAEMONS[@]}"; do
-                if ! systemctl stop "$svc" >/dev/null 2>&1; then
-                    STOP_FAILED+=("$svc")
-                fi
-            done
-            if [ "${#STOP_FAILED[@]}" -gt 0 ]; then
-                print_failed
-                error "Failed stopping daemon(s): ${STOP_FAILED[*]}"
-                exit 1
-            fi
-            print_OK
-            ;;
-        fail-fast)
-            print_failed
-            error "Active daemons detected (${ACTIVE_DAEMONS[*]}). Re-run with VOX_DAEMON_PRECHECK_MODE=auto-stop to allow controlled stop."
-            exit 1
-            ;;
-        off)
-            warn "Skipping daemon precheck action (VOX_DAEMON_PRECHECK_MODE=off)."
-            print_OK
-            ;;
-        *)
-            print_failed
-            error "Unsupported VOX_DAEMON_PRECHECK_MODE='${DAEMON_PRECHECK_MODE}'. Use: auto-stop, fail-fast, or off."
-            exit 1
-            ;;
-    esac
-fi
-info "Daemon precheck mode: ${DAEMON_PRECHECK_MODE}"
+check_audio_daemons "${VOX_DAEMON_PRECHECK_MODE:-auto-stop}"
 
 
 section "Installing basic tools"
@@ -148,60 +101,8 @@ run_cmd /var/cache/upmpdcli/venv/bin/pip install -q --upgrade tidalapi
 
 section "Applying service configurations"
 
-task "Selecting ALSA playback device for MPD"
-MPD_ALSA_DEVICE="default"
-ALSA_SELECTOR_POLICY="${ALSA_SELECTOR_POLICY:-direct-first}"
-PROBE_FILE="/tmp/vox-alsa-probe.raw"
-
-if command -v aplay >/dev/null 2>&1; then
-    if dd if=/dev/zero of="$PROBE_FILE" bs=1764 count=50 status=none; then
-        ALSA_CARD_NAME=$(aplay -l 2>/dev/null | awk -F'[: ]+' '/^card [0-9]+:/{print $3; exit}')
-        CANDIDATES=()
-
-        if [ -n "$ALSA_CARD_NAME" ]; then
-            if [ "$ALSA_SELECTOR_POLICY" = "direct-first" ]; then
-                CANDIDATES+=("hw:CARD=${ALSA_CARD_NAME},DEV=0" "plughw:CARD=${ALSA_CARD_NAME},DEV=0" "sysdefault:CARD=${ALSA_CARD_NAME}")
-            else
-                CANDIDATES+=("plughw:CARD=${ALSA_CARD_NAME},DEV=0" "hw:CARD=${ALSA_CARD_NAME},DEV=0" "sysdefault:CARD=${ALSA_CARD_NAME}")
-            fi
-        fi
-
-        CANDIDATES+=("hw:0,0" "default")
-
-        UNIQUE_CANDIDATES=()
-        for candidate in "${CANDIDATES[@]}"; do
-            skip="0"
-            for existing in "${UNIQUE_CANDIDATES[@]}"; do
-                if [ "$candidate" = "$existing" ]; then
-                    skip="1"
-                    break
-                fi
-            done
-            if [ "$skip" = "0" ]; then
-                UNIQUE_CANDIDATES+=("$candidate")
-            fi
-        done
-
-        for candidate in "${UNIQUE_CANDIDATES[@]}"; do
-            if timeout 4 aplay -q -D "$candidate" -f S16_LE -r 44100 -c 2 "$PROBE_FILE" >/dev/null 2>&1; then
-                MPD_ALSA_DEVICE="$candidate"
-                break
-            fi
-        done
-
-        rm -f "$PROBE_FILE"
-    else
-        warn "Could not create ALSA probe sample. Falling back to default."
-    fi
-else
-    warn "aplay not available. Falling back to default."
-fi
-
-if [ "$MPD_ALSA_DEVICE" = "default" ]; then
-    warn "No preferred ALSA PCM candidate validated. Using default PCM."
-fi
-print_OK
-info "MPD ALSA device selected: ${MPD_ALSA_DEVICE} (policy: ${ALSA_SELECTOR_POLICY})"
+MPD_ALSA_DEVICE=$(probe_alsa_device "${ALSA_SELECTOR_POLICY:-direct-first}")
+info "MPD ALSA device selected: ${MPD_ALSA_DEVICE} (policy: ${ALSA_SELECTOR_POLICY:-direct-first})"
 
 task "Configuring MPD"
 cat <<EOF > /etc/mpd.conf
@@ -299,15 +200,7 @@ amixer sset PCM 100% >/dev/null 2>&1
 amixer sset Front 100% unmute >/dev/null 2>&1'
 
 section "Account Configuration"
-TIDAL_CRED_FILE="/var/cache/upmpdcli/tidal/pkce.credentials.json"
-info "Starting interactive Tidal authorization..."
-# Ensure the directory exists and is writable by upmpdcli
-mkdir -p /var/cache/upmpdcli/tidal
-chown upmpdcli:upmpdcli /var/cache/upmpdcli/tidal
-
-if ! sudo -u upmpdcli python3 /usr/share/upmpdcli/cdplugins/tidal/get_credentials.py -t pkce -f "$TIDAL_CRED_FILE"; then
-    warn "Tidal authorization skipped or failed."
-fi
+authorize_tidal "/var/cache/upmpdcli/tidal/pkce.credentials.json"
 
 section "Starting services"
 task "Reloading systemd"
